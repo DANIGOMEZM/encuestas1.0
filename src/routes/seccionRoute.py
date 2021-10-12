@@ -11,10 +11,12 @@ def crear_seccion():
     if request.method=='POST':
         nombre=request.form["nombre"]
         id_encuesta=request.form["id_encuesta"]
-
+        print('datos: -->')
+        print(nombre)
+        print(id_encuesta)
         seccionDto=SeccionDTO(
-            nombre=nombre,
-	        encuesta_id=id_encuesta
+            nombre=str(nombre),
+	        encuesta_id=int(id_encuesta)
         )
         crearSeccion=seccionController.create(seccionDto)
     
@@ -29,12 +31,13 @@ def obtener_seccion():
     else:
         return Response('No existe la seccion', 400, mimetype='application/json')
     
-@app.route('/secciones', methods=['POST'])
+@app.route('/secciones_encuesta')
 def obtener_por_encuesta():
-    if request.method=='POST':
-        id_encuesta=request.form["id_encuesta"]
-        seccions=seccionController.findByEncuesta(int(id_encuesta))
-        return jsonify([Seccion.json(sec) for sec in seccions])
+    id_encuesta=request.args.get('id')
+    print('id_encuesta: --->')
+    print(id_encuesta)
+    seccions=seccionController.findByEncuesta(int(id_encuesta))
+    return jsonify([Seccion.json(sec) for sec in seccions])
 
 
 @app.route('/secciones')
@@ -54,7 +57,7 @@ def actualizar_seccion():
 @app.route('/seccion',methods=['DELETE'])
 def eliminar_seccion():
     if request.method=='DELETE':
-        id_=request.form["id"]
+        id_=request.args.get('id')
         seccionController.delete(int(id_))
         response = Response("seccion eliminada", 201, mimetype='application/json')
         return response  

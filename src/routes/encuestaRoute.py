@@ -22,8 +22,9 @@ def crear_encuesta():
     if request.method=='POST':
         nombre=request.form["nombre"]
         descripcion=request.form["descripcion"]
-        file=request.files["img"]
         user_id=request.form["user_id"]
+
+        file=request.files["img"]
 
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.root_path, "static/uploads/", filename))
@@ -32,10 +33,10 @@ def crear_encuesta():
         img_url='http://127.0.0.1:5000/static/uploads/'+filename 
 
         encuestaDto=EncuestaDTO(
-            nombre=nombre,
-            descripcion=descripcion,
-            img=img_url,
-	        user_id=user_id
+            nombre=str(nombre),
+            descripcion=str(descripcion),
+            img=str(img_url),
+	        user_id=int(user_id)
         )
         crearEncuesta=encuestaController.create(encuestaDto)
     
@@ -50,12 +51,11 @@ def obtener_encuesta():
     else:
         return Response('No existe la encuesta', 400, mimetype='application/json')
     
-@app.route('/encuestas_usuario', methods=['POST'])
+@app.route('/encuestas_usuario')
 def obtener_por_usuario():
-    if request.method=='POST':
-        id_=request.form["id"]
-        encuestas=encuestaController.findByUser(int(id_))
-        return jsonify([Encuesta.json(enc) for enc in encuestas])
+    id_=request.args.get('id')
+    encuestas=encuestaController.findByUser(int(id_))
+    return jsonify([Encuesta.json(enc) for enc in encuestas])
 
 
 @app.route('/encuestas')
@@ -90,7 +90,8 @@ def actualizar_encuesta():
 @app.route('/encuesta',methods=['DELETE'])
 def eliminar_encuesta():
     if request.method=='DELETE':
-        id_=request.form["id"]
+        #id_=request.form['id']
+        id_=request.args.get('id')
         encuestaController.delete(int(id_))
         response = Response("Encuesta eliminada", 201, mimetype='application/json')
         return response  

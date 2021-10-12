@@ -1,24 +1,47 @@
 #controlador, #app, flask, response,dto, 
 from src.controllers.auth.userController import UserController
 from src import app
-from flask import request, session, Response 
+from flask import request, session, Response, jsonify, make_response
 from src.models.user import User
 from src.dto.user import UserDTO
 import hashlib
-
 userController = UserController()
 
-@app.route('/register', methods=['POST'])
+### CORS section
+"""
+@app.after_request
+def after_request_func(response):
+    origin = request.headers.get('Origin')
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
+        response.headers.add('Access-Control-Allow-Headers', 'x-csrf-token')
+        response.headers.add('Access-Control-Allow-Methods',
+                            'GET, POST, OPTIONS, PUT, PATCH, DELETE')
+        if origin:
+            response.headers.add('Access-Control-Allow-Origin', origin)
+    else:
+        response.headers.add('Access-Control-Allow-Credentials', 'true')
+        if origin:
+            response.headers.add('Access-Control-Allow-Origin', origin)
+
+    return response
+### end CORS section
+"""
+@app.route('/api/register', methods=['POST'])
 def registrar_usuario():
     validation=''
     if request.method=='POST':
-        nombre=request.form["nombre"]
-        email=request.form["email"]
-        contrasenia=request.form["contrasenia"]
+        user=request.json['user']
+
+        nombre=user["nombre"]
+        email=user["email"]
+        contrasenia=user["contrasenia"]
 
     if(userController.userFound(nombre)):
             validation="El nombre de usuario ya existe en la base de datos, elige otro porfavor"
-            return Response(validation, 400, mimetype='application/json')
+            return Response(validation, 401, mimetype='application/json')
     else:
         validation="Usuario creado, Puedes Iniciar Sesion"
         #contrasenia encryptada
@@ -26,40 +49,37 @@ def registrar_usuario():
         password=h.hexdigest()
         #agregamos el nuevo usuario a la base de datos
         userDto=UserDTO(
-            nombre=nombre,
-            email=email,
-            contrasenia=password
+            nombre=str(nombre),
+            email=str(email),
+            contrasenia=str(password)
         )
         crearUsuario=userController.create(userDto)
         return Response(validation, 201, mimetype='application/json')
 
-@app.route('/login', methods=['POST'])
+@app.route('/api/login', methods=['POST'])
 def iniciar_sesion():
     validation=""
     if(request.method=="POST"):
-        nombre=request.form.get('nombre')
-        contrasenia=request.form.get('contrasenia')
+        user=request.json['user']
+
+        nombre=user['nombre']
+        contrasenia=user['contrasenia']
 
         #filtrar por nombre y contrasenia en la db
         h=hashlib.new("sha1",str(contrasenia).encode('utf-8'))
         password=h.hexdigest()
-
-        userdto=UserDTO(nombre,"",password)
+        userdto=UserDTO(str(nombre),"",str(password))
         resolve_user=userController.authUser(userdto)
-
         if(resolve_user):
             session.permanent=True
             session["user"]=resolve_user.nombre
             session["id"]=resolve_user.id
-            validation='sesion iniciada correctamente'
-            return Response(validation, 201, mimetype='application/json')
-
+            return jsonify(User.json(resolve_user))
         else:
             validation="Nombre de usuario o contraseña incorrectos"
-            return Response(validation, 400, mimetype='application/json')
+            return Response(validation, 401, mimetype='application/json')
 
-
-@app.route('/logout')
+@app.route('/api/logout')
 def logout():
     session.pop("user",None)
     session.pop("id",None)
