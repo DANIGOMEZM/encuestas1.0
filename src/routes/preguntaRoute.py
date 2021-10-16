@@ -31,10 +31,9 @@ def obtener_pregunta():
     else:
         return Response('No existe la pregunta', 400, mimetype='application/json')
     
-@app.route('/preguntas', methods=['POST'])
+@app.route('/preguntas_seccion')
 def obtener_por_seccion():
-    if request.method=='POST':
-        id_seccion=request.form["id_seccion"]
+        id_seccion=request.args.get("id")
         preguntas=preguntaController.findBySeccion(int(id_seccion))
         return jsonify([Pregunta.json(prg) for prg in preguntas])
 
@@ -49,14 +48,22 @@ def actualizar_pregunta():
     if request.method=='PUT':
         id_=request.form['id']
         pregunta=request.form['pregunta']
-        preguntaController.update(int(id_),pregunta)
+        id_tipo_pregunta=request.form['id_tipo_pregunta']
+
+        preguntaDto=PreguntaDTO(
+            pregunta=pregunta,
+            id_seccion=None,
+            id_tipo_pregunta=id_tipo_pregunta
+        )
+
+        preguntaController.update(int(id_),preguntaDto)
         response = Response("pregunta Actualizada", 201, mimetype='application/json')
         return response       
 
 @app.route('/pregunta',methods=['DELETE'])
 def eliminar_pregunta():
     if request.method=='DELETE':
-        id_=request.form["id"]
+        id_=request.args.get("id")
         preguntaController.delete(int(id_))
         response = Response("pregunta eliminada", 201, mimetype='application/json')
         return response  

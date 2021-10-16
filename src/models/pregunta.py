@@ -36,9 +36,10 @@ class Pregunta(db.Model):
         query_result = Pregunta.query.filter_by(id_seccion=id_seccion).all()
         return query_result
 
-    def update_pregunta(self, id_, pregunta):
+    def update_pregunta(self, id_, pregunta:PreguntaDTO):
         pregunta_update= Pregunta.query.filter_by(id=id_).first()
-        pregunta_update.pregunta=pregunta
+        pregunta_update.pregunta=pregunta.pregunta
+        pregunta_update.id_tipo_pregunta=pregunta.id_tipo_pregunta
         db.session.commit()
     
     def delete_pregunta(self, id_):

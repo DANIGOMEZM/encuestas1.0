@@ -17,7 +17,7 @@ class PreguntaController():
     def findBySeccion(self,id_seccion:int):
         return Pregunta().finBySeccion(id_seccion)
 
-    def update(self, id_:int, pregunta:str):
+    def update(self, id_:int, pregunta:PreguntaDTO):
         Pregunta().update_pregunta(id_, pregunta)
 
     def delete(self, id_:int):
